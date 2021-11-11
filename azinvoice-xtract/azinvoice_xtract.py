@@ -26,7 +26,7 @@ def xtract_one_azinvoice(srcname:str, azformJson:dict, inclBox:bool, inclFields:
                 else:
                     l = {'fld': fld, 'type': f.get('type'), 'text': '', 'value': '', 'score': 0, 'tbllist': list()}
                     for rno, r in enumerate(f.get('valueArray')):
-                        if 'type' in r and r.get('type') in ['object']:
+                        if 'type' in r and r.get('type') in ['object'] and 'valueObject' in r:
                             l.get('tbllist').append({'rno': rno+1, 'r': list()})
                             
                             itmobj = r.get('valueObject')
@@ -55,6 +55,7 @@ def collate_xtractd_azinvoices(xtractdAzInvoices:dict) -> dict:
                 cl_fields.update({xtract_row.get('fld'): {'clflds': [], 'textseen': list()}}) if xtract_row.get('fld') not in cl_fields else None
                 if xtract_row.get('text') not in cl_fields.get(xtract_row.get('fld')).get('textseen'):
                     # keep only unique records
+                    xtract_row.pop('tbllist', None)
                     cl_fields.get(xtract_row.get('fld')).get('clflds').append(xtract_row)
                     cl_fields.get(xtract_row.get('fld')).get('textseen').append(xtract_row.get('text'))
 
@@ -67,6 +68,7 @@ def collate_xtractd_azinvoices(xtractdAzInvoices:dict) -> dict:
                         cl_fields.update({col.get('fld'): {'clflds': [], 'textseen': list()}}) if col.get('fld') not in cl_fields else None
                         if col.get('text') not in cl_fields.get(col.get('fld')).get('textseen'):
                             # keep only unique records
+                            col.pop('tbllist', None)
                             cl_fields.get(col.get('fld')).get('clflds').append(col)
                             cl_fields.get(col.get('fld')).get('textseen').append(col.get('text'))
 
@@ -80,10 +82,11 @@ def collate_xtractd_azinvoices(xtractdAzInvoices:dict) -> dict:
 
     return cl_fields
 
-files = ["InvoiceResult-C0139 08-30-2021 DIR108647.pdf.json", "InvoiceResult-D0024 08-27-2021 CIN0009795.pdf.json", "InvoiceResult-D0024 08-31-2021 CIN0010044.pdf.json"]
+#files = ["InvoiceResult-C0139 08-30-2021 DIR108647.pdf.json", "InvoiceResult-D0024 08-27-2021 CIN0009795.pdf.json", "InvoiceResult-D0024 08-31-2021 CIN0010044.pdf.json"]
+files = ["InvoiceResult-A0095 01-12-2021 382576-4328.pdf.json"]
 xtract_result = dict()
 for f in files:
-    with open(f) as fptr:
+    with open(f, encoding="utf8") as fptr:
         azform_json = json.load(fptr)
         xtract_flds = xtract_one_azinvoice(srcname=f, azformJson=azform_json, inclBox=False, inclFields=True)
         fptr.close()
